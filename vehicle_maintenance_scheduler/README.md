@@ -1,190 +1,148 @@
-# Vehicle Maintenance Scheduler API 🚛
+# Vehicle Maintenance Scheduler & Priority Notification Engine
 
-![Django](https://img.shields.io/badge/Django-4.2-092E20?style=for-the-badge&logo=django)
-![DRF](https://img.shields.io/badge/DRF-3.14-092E20?style=for-the-badge&logo=django)
-![Python](https://img.shields.io/badge/Python-3.11-3776AB?style=for-the-badge&logo=python)
-![Architecture](https://img.shields.io/badge/Architecture-Layered-FF6F00?style=for-the-badge)
+A production-grade, highly modular backend designed to optimize vehicle maintenance schedules and prioritize incoming notifications. The project is implemented using Python, Django, and Django REST Framework, adhering to clean, layered architectural boundaries.
 
-## 1. Project Overview
-A production-grade backend system designed to optimize vehicle maintenance schedules across various depots. The system models vehicle task assignments as a 0/1 Knapsack problem, ensuring maximum operational impact within strictly bounded mechanic hours.
+The optimization logic solves task scheduling using a **0/1 Knapsack Dynamic Programming** algorithm to maximize maintenance impact within bounded mechanic hours, while the priority ranking utilizes a **Min-Heap** structure to dynamically extract the highest-priority events in real-time.
 
-## 2. Afformed Evaluation Context
-This project serves as the submission for the Afformed Campus Hiring Backend Evaluation. It rigorously implements layered architecture, extensive global logging, algorithmic problem solving, and strict exception handling.
+---
 
-## 3. Architecture Overview
-The application strictly adheres to Clean Architecture:
-*   **Controllers (`views`)**: Thin layer handling HTTP and DRF routing.
-*   **Services**: Core business logic bridging algorithms and data.
-*   **Repositories**: External data access layer wrapping external API calls.
-*   **Algorithms**: Mathematical engine (0/1 Knapsack DP, Top-K Heap).
-*   **Logging Middleware**: Standalone asynchronous error-tracking package.
+## Technical Architecture
 
-## 4. Folder Structure
+The codebase separates responsibilities into distinct layers to enforce high cohesion and low coupling:
+
+*   **Controllers (API views)**: Expose thin endpoints, validate incoming request parameters, and format standardized JSON payloads.
+*   **Services**: Orchestrate business logic, coordinate repository communications, and invoke mathematical engines.
+*   **Repositories**: Abstract external network communication. Responsible for querying the Afformed Evaluation APIs, performing sanitization, and filtering resources locally.
+*   **Algorithms**: Pure, isolated mathematical layers (e.g., Knapsack DP solver and dynamic Heap prioritizer).
+*   **Middleware**: Intercepts boundary transactions for global custom exceptions and transparent, background logging.
+*   **Logging Middleware Package**: Decoupled, asynchronous package executing log dispatches on background worker threads with exponential backoff and payload validation.
+
+### Directory Structure
+
 ```text
 vehicle_maintenance_scheduler/
-├── logging_middleware/    # Externalized decoupled logging package
-├── core/                  # Django Settings and ASGI/WSGI
+├── logging_middleware/        # Decoupled standalone logging package
+│   ├── api_client.py          # Staged, asynchronous log dispatcher
+│   ├── logger.py              # Main Log() interface with auto-truncation logic
+│   └── validators.py          # Schema & payload format enforcement
+├── core/                      # Project configuration & settings
 ├── src/
-│   ├── algorithms/        # DP Knapsack & Heaps
-│   ├── config/            # Env loaders
-│   ├── controllers/       # HTTP Request/Response handling
-│   ├── handlers/          # DRF Exception Catchers
-│   ├── middleware/        # Global Django Request/Exception middlewares
-│   ├── models/            # Domain definitions
-│   ├── repositories/      # External HTTP abstractions
-│   ├── routes/            # Django path definitions
-│   ├── serializers/       # Payload Validation
-│   ├── services/          # Core Business Workflows
-│   ├── tests/             # Pytest/Unittest suite
-│   └── utils/             # HTTP Client, Response Formatting
-├── manage.py
-└── requirements.txt
+│   ├── algorithms/            # Dynamic Programming & Heap algorithms
+│   ├── config/                # Environment variables and dynamic secrets loader
+│   ├── controllers/           # Slim HTTP routing views
+│   ├── handlers/              # Centralized exception handlers
+│   ├── middleware/            # Logging and exception middlewares
+│   ├── repositories/          # Decoupled HTTP API repository clients
+│   ├── routes/                # API router URL mapping
+│   ├── serializers/           # Request/response validation schemas
+│   ├── services/              # Core workflow orchestrations
+│   ├── tests/                 # Full unit test suites
+│   └── utils/                 # Structured responses & base HTTP clients
+├── requirements.txt           # Dependency definition
+└── manage.py
 ```
 
-## 5. Technology Stack
-*   **Framework**: Python 3.11+, Django 4.2+, Django REST Framework
-*   **Environment**: `python-dotenv`
-*   **Network**: `requests`
+---
 
-## 6. Setup Instructions
-### 7. Virtual Environment Setup
+## Algorithmic Details
+
+### 1. 0/1 Knapsack Maintenance Optimizer
+To select the optimal combination of vehicle tasks that yield the highest impact under a fixed budget of mechanic hours ($W$):
+*   **Mathematical Modeling**: Standard $O(n \times W)$ Dynamic Programming.
+*   **Refinements**: Zero-duration tasks are filtered out early to prevent wasted iterations. 
+*   **Backtracking**: A pointer backtracking algorithm rebuilds the exact selected array of tasks in $O(n)$ to ensure full traceability in API responses.
+
+### 2. $O(n \log k)$ Notification Priority Ranking
+To select the Top $K=10$ notifications sorted by Priority (`Placement` > `Result` > `Event`) and Recency:
+*   **Complexity**: Rather than performing a heavy $O(n \log n)$ full sort on unbounded datasets, we maintain a **Min-Heap** bounded at size $k$.
+*   **Execution**: Incoming items are evaluated in $O(n \log k)$ time, discarding lower priority events dynamically to ensure high scaling performance.
+
+---
+
+## Setup & Execution
+
+### Prerequisites
+*   Python 3.11+
+*   Virtual environment (`venv`)
+
+### 1. Virtual Environment & Dependencies
 ```bash
+# Create and activate environment
 python -m venv venv
-# Windows:
 .\venv\Scripts\activate
-# Mac/Linux:
-source venv/bin/activate
-```
 
-### 8. Dependency Installation
-```bash
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 9. Environment Variables
-Create a `.env` file at the project root:
-```dotenv
+### 2. Configure Environment Secrets
+Create a `.env` file at the root of `vehicle_maintenance_scheduler`:
+```ini
 BASE_URL=http://4.224.186.213/evaluation-service
-EMAIL=
-NAME=
-ROLL_NO=
-ACCESS_CODE=
-GITHUB_USERNAME=
+ACCESS_TOKEN=your_jwt_here
 
-CLIENT_ID=
-CLIENT_SECRET=
-ACCESS_TOKEN=
+CLIENT_ID=your_client_id
+CLIENT_SECRET=your_client_secret
 
-DJANGO_SECRET_KEY=secure-key
+DJANGO_SECRET_KEY=dev-secret-key-change-in-prod
 DJANGO_DEBUG=True
 DJANGO_ALLOWED_HOSTS=127.0.0.1,localhost
 ```
 
-### 10. Running the Project
+### 3. Start Development Server
 ```bash
 python manage.py migrate
 python manage.py runserver
 ```
 
-## 11. API Documentation
-All endpoints share the `/api/v1/` prefix.
-*   `GET /api/v1/depots`: Fetch all depots.
-*   `GET /api/v1/tasks`: Fetch all tasks.
-*   `GET /api/v1/schedule/<depot_id>`: Run the optimizer for a depot.
-*   `GET /api/v1/priority-notifications`: Retrieve the top-10 ranked notifications.
+---
 
-### Standardized Response Schema
-**SUCCESS:**
-```json
-{
-  "success": true,
-  "message": "Operation completed successfully",
-  "data": {}
-}
-```
-**ERROR:**
-```json
-{
-  "success": false,
-  "message": "Validation failed",
-  "errors": {"detail": "Error string"}
-}
-```
+## Verification & API Endpoints
 
-## 12. Logging Middleware Explanation
-Built as a completely decoupled python package (`logging_middleware`).
-*   **Non-Blocking**: Uses `threading.Thread(daemon=True)` to offload API calls.
-*   **Strict Validation**: Enforces Allowed Stacks, Levels, and Packages before transmission.
-*   **Exception Safe**: Employs deep try/except blocks to guarantee logging failures never crash the main thread.
+All endpoints are standardized under the `/api/v1/` prefix:
 
-## 13. Knapsack Optimization Explanation
-The core requirement, maximizing task impact within constrained mechanic hours, is modeled identically to the `0/1 Knapsack Problem`.
-*   **Complexity**: $O(n \times W)$ Time and Space via 2D array.
-*   **Execution**: Iterates over all tasks, computing optimal sub-structures. A backtracking loop rebuilds the exact selected array of tasks.
-
-## 14. Notification Priority Engine Explanation
-*   **Problem**: Returning the top 10 notifications ranked by Priority (`Placement > Result > Event`) and Recency.
-*   **Implementation**: A Min-Heap (via `heapq`) maintaining exactly $k=10$ elements.
-*   **Complexity**: $O(n \log k)$. Considerably more scalable than $O(n \log n)$ full sorting for large datasets.
-
-## 15. Middleware Architecture
-Django `MiddlewareMixin` is used to capture data at the network boundary.
-1.  **RequestLoggingMiddleware**: Traces `start_time` and emits success/warning/error logs to Afformed tracking the route and execution MS.
-2.  **GlobalExceptionMiddleware**: Operates as the last line of defense, intercepting 500s and standardizing them into JSON.
-
-## 16. Exception Handling Strategy
-Custom DRF exception handlers trap `APIException`s at the view layer. Repositories throw custom `ExternalAPIException`. Unhandled Python crashes hit the Global Exception Middleware.
-
-## 17. Scalability Considerations
-*   Stateless architecture allows horizontal pod scaling.
-*   Algorithm isolation prevents heavy math from blocking web threads.
-
-## 18. Design Decisions
-*   **Repository Pattern**: Abstracts external APIs away from business logic, making testing via mocks easy.
-*   **Centralized Config**: `Environment` class ensures missing env vars fail gracefully on boot.
-
-## 19. Future Improvements
-*   Implement Redis for caching external depot data.
-*   Migrate logging dispatch to Celery for absolute thread isolation.
-*   Add PostgreSQL for persistent audit trails.
-
-## 20. Testing Instructions
-Navigate to the `vehicle_maintenance_scheduler` directory and run:
-```bash
-python manage.py test src.tests
-```
-
-## 21. Screenshots Section
-*(Place your generated screenshots in `vehicle_maintenance_scheduler/screenshots/`)*
-
-## 22. Postman Collection Usage
-1.  Import the APIs.
-2.  Test `GET /api/v1/schedule/1` and observe the `"selectedTasks"` array.
-3.  Test `GET /api/v1/priority-notifications` to view dynamic heap sorts.
-
-## 23. Performance Optimizations
-*   Using $O(n \log k)$ Heap instead of standard array sorting.
-*   Dropping zero-duration tasks from DP loops early to bypass iteration.
-
-## 24. Retry & Timeout Strategy
-`BaseHttpClient` uses **Exponential Backoff**:
-*   Timeout is strictly capped to `5.0s`.
-*   Fails sequentially, sleeping `backoff_factor ** attempt`.
-*   Raises `ExternalAPIException` after maximum limits breached.
+*   **`GET /api/v1/depots`**: Fetches all depots and their respective operational mechanic capacities.
+*   **`GET /api/v1/tasks`**: Retrieves global vehicle tasks ready for scheduling.
+*   **`GET /api/v1/schedule/<depot_id>`**: Resolves the depot ID locally, loads global tasks, computes the optimal schedule, and logs execution details.
+*   **`GET /api/v1/priority-notifications`**: Renders the top-10 sorted priority notifications using the dynamic heap ranker.
 
 ---
 
-## Final Project Checklist
-- [x] Environment variables securely loaded.
-- [x] Middlewares validating schemas properly.
-- [x] Repositories clean of business logic.
-- [x] `requirements.txt` generated.
-- [x] `.gitignore` deployed.
+## Test Coverage
 
-## Screenshot Checklist for Evaluator
-- [ ] Registration API Success
-- [ ] Auth Token Generation Body
-- [ ] Logging API Hit via Request Logger
-- [ ] Schedule API JSON Response ($W=60$)
-- [ ] Priority Notifications (Sorted output)
-- [ ] Console showing Afformed Background Logs executing safely.
+A full unittest suite is located under `src/tests` covering business logic, repositories, and math algorithms. Run tests using:
+
+```bash
+$env:DJANGO_SETTINGS_MODULE="core.settings"
+venv\Scripts\python.exe -m unittest discover -s src/tests -p "test_*.py"
+```
+
+---
+
+## Verification Gallery & Screenshots
+
+Below are verification screenshots showcasing real-time API execution, validation structures, and successful endpoint operations against the Afformed Evaluation APIs.
+
+### Endpoint: Schedule Generation Pipeline
+Optimal task scheduling computation ($W=188$ Mechanic Hours) executing DP algorithms:
+![Schedule Generation Endpoint Output](../screenshot/Screenshot%202026-05-18%20163957.png)
+
+### Endpoint: Ranked Priority Notifications
+Retrieving top notifications sorted strictly by category priority and timestamp recency:
+![Priority Notifications Endpoint Output](../screenshot/Screenshot%202026-05-18%20164056.png)
+
+### Endpoint: Depot Resolution
+Listing all available depots along with their allocated mechanic capacities:
+![Depots Endpoint Output](../screenshot/Screenshot%202026-05-18%20163703.png)
+
+### Live Server Logs & Daemon Process Execution
+Showing background daemon threads successfully dispatching logs with auto-truncation:
+![Console Logs Background Execution](../screenshot/Screenshot%202026-05-18%20163545.png)
+
+### Global Task API Response
+Listing global vehicle tasks fetched and formatted from the external evaluation service:
+![Tasks Endpoint Output](../screenshot/Screenshot%202026-05-18%20163635.png)
+
+### Algorithmic Test Suite Verification
+Showing all dynamic programming, min-heap routing, and repository integration tests passing:
+![Unit Test Suite Execution](../screenshot/Screenshot%202026-05-18%20152004.png)
