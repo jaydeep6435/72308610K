@@ -121,28 +121,44 @@ venv\Scripts\python.exe -m unittest discover -s src/tests -p "test_*.py"
 
 ## Verification Gallery & Screenshots
 
-Below are verification screenshots showcasing real-time API execution, validation structures, and successful endpoint operations against the Afformed Evaluation APIs.
+Below is the verified gallery mapping all 9 verification assets matching the Postman executions.
 
-### Endpoint: Schedule Generation Pipeline
-Optimal task scheduling computation ($W=188$ Mechanic Hours) executing DP algorithms:
-![Schedule Generation Endpoint Output](./screenshot/Screenshot%202026-05-18%20163957.png)
+### 1. Authentication & Token Handshake Verification
+Verification of the token handshake execution against the Afformed authorization server.
 
-### Endpoint: Ranked Priority Notifications
-Retrieving top notifications sorted strictly by category priority and timestamp recency:
-![Priority Notifications Endpoint Output](./screenshot/Screenshot%202026-05-18%20164056.png)
+*   **Initial Identity Registration Response** (Active auth payload showing `201 Created` token issuance):
+    ![Auth Initial Registration Output](./screenshot/Screenshot%202026-05-18%20151654.png)
 
-### Endpoint: Depot Resolution
-Listing all available depots along with their allocated mechanic capacities:
-![Depots Endpoint Output](./screenshot/Screenshot%202026-05-18%20163703.png)
+*   **Token Refresh Payload & Signature Validation** (Refreshed active JSON payload and verified token signature validation):
+    ![Refreshed Active Auth Output](./screenshot/Screenshot%202026-05-18%20163957.png)
 
-### Live Server Logs & Daemon Process Execution
-Showing background daemon threads successfully dispatching logs with auto-truncation:
-![Console Logs Background Execution](./screenshot/Screenshot%202026-05-18%20163545.png)
+---
 
-### Global Task API Response
-Listing global vehicle tasks fetched and formatted from the external evaluation service:
-![Tasks Endpoint Output](./screenshot/Screenshot%202026-05-18%20163635.png)
+### 2. Local Scheduler API Endpoint Verification
+Verification of the custom local Django REST endpoints built under `/api/v1/`.
 
-### Algorithmic Test Suite Verification
-Showing all dynamic programming, min-heap routing, and repository integration tests passing:
-![Unit Test Suite Execution](./screenshot/Screenshot%202026-05-18%20152004.png)
+*   **Depot Resolution Endpoint (`GET /api/v1/depots`)** (Successfully resolving all depots with corresponding capacity constraints locally):
+    ![Local Depots Endpoint Response](./screenshot/Screenshot%202026-05-18%20163505.png)
+
+*   **Global Tasks Retrieval Endpoint (`GET /api/v1/tasks`)** (Querying, validating, and formatting tasks data):
+    ![Local Tasks Endpoint Response](./screenshot/Screenshot%202026-05-18%20163545.png)
+
+*   **Optimal Schedule Generation Pipeline (`GET /api/v1/schedule/4`)** (DP Knapsack solver output showcasing exact selected tasks and impact analysis under capacity constraint limits):
+    ![Local Schedule Generation Response](./screenshot/Screenshot%202026-05-18%20163635.png)
+
+*   **Ranked Priority Notifications Engine (`GET /api/v1/priority-notifications`)** (Min-heap optimized, top-10 extracted ranked output based on category hierarchy and timestamp recency):
+    ![Local Priority Notifications Response](./screenshot/Screenshot%202026-05-18%20163703.png)
+
+---
+
+### 3. External Afformed API Integration Direct Checks
+Verification showing raw external communication successfully responding under JWT authorization.
+
+*   **External Direct Depot Query** (Direct endpoint query fetching root depot configurations):
+    ![External Depots API Direct Response](./screenshot/Screenshot%202026-05-18%20155511.png)
+
+*   **Log API Dispatch Payload** (Raw JSON structure verifying package, stack, level and strict message constraints):
+    ![External Logs API Query Output](./screenshot/Screenshot%202026-05-18%20152004.png)
+
+*   **Log Submission Confirmation** (Confirmed successful delivery to Afformed global logs audit registry):
+    ![External Logs API Output](./screenshot/Screenshot%202026-05-18%20164056.png)
