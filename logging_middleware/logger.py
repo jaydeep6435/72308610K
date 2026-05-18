@@ -55,6 +55,10 @@ def Log(stack: str, level: str, package: str, message: str) -> None:
         message (str): The log message body.
     """
     try:
+        # Standardize message length (maximum 48 characters allowed by Afformed API)
+        if isinstance(message, str) and len(message) > 48:
+            message = message[:45] + "..."
+            
         # Run asynchronously to avoid blocking main application thread
         run_in_background(AfformedLogger.process_log, stack, level, package, message)
     except Exception as e:

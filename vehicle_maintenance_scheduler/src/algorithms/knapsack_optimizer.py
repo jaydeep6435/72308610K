@@ -17,10 +17,10 @@ class KnapsackOptimizer:
     
     @staticmethod
     def optimize(available_hours: int, tasks: list) -> dict:
-        Log("backend", "info", "utils", "Optimization algorithm started")
+        Log("backend", "info", "domain", "Optimization algorithm started")
         
         if not tasks:
-            Log("backend", "warn", "utils", "Invalid inputs: empty task list provided")
+            Log("backend", "warn", "domain", "Invalid inputs: empty task list provided")
             return {
                 "totalImpact": 0,
                 "usedHours": 0,
@@ -31,7 +31,7 @@ class KnapsackOptimizer:
         W = available_hours
         
         if W <= 0:
-            Log("backend", "warn", "utils", "Edge-case detection: Invalid or zero available hours")
+            Log("backend", "warn", "domain", "Edge-case detection: Invalid or zero available hours")
             return {
                 "totalImpact": 0,
                 "usedHours": 0,
@@ -49,7 +49,7 @@ class KnapsackOptimizer:
             
             # Skip invalid tasks
             if wt <= 0 or val < 0:
-                Log("backend", "warn", "utils", f"Edge-case detection: Skipping invalid task {task.get('TaskID')}")
+                Log("backend", "warn", "domain", f"Edge-case detection: Skipping invalid task {task.get('TaskID')}")
                 for w in range(W + 1):
                     dp[i][w] = dp[i - 1][w]
                 continue
@@ -60,7 +60,7 @@ class KnapsackOptimizer:
                 else:
                     dp[i][w] = dp[i - 1][w]
                     
-        Log("backend", "debug", "utils", "DP execution milestones reached")
+        Log("backend", "debug", "domain", "DP execution milestones reached")
         
         # Reconstruction logic
         res = dp[n][W]
@@ -90,7 +90,7 @@ class KnapsackOptimizer:
         # To maintain the natural sequence (though not strictly required)
         selected_tasks.reverse()
         
-        Log("backend", "info", "utils", "Optimization generation completed")
+        Log("backend", "info", "domain", "Optimization generation completed")
         
         return {
             "totalImpact": total_impact,

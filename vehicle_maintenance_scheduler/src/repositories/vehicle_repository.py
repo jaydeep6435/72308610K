@@ -12,17 +12,17 @@ class VehicleRepository:
     Repository layer for managing Vehicle external API communications.
     """
     @staticmethod
-    def get_tasks_for_depot(depot_id: int) -> list:
-        Log("backend", "info", "repository", f"Fetching vehicle tasks for depot ID {depot_id}")
+    def get_all_tasks() -> list:
+        Log("backend", "info", "repository", "Fetching vehicle maintenance tasks")
         
-        url = ConfigLoader.get_api_url(f"depots/{depot_id}/vehicles")
+        url = ConfigLoader.get_api_url("vehicles")
         
         try:
             response = http_client.get(url)
             Log("backend", "debug", "repository", "Vehicle API response received")
             
-            # Assuming API returns a list under a 'tasks' or 'data' key, or straight list
-            tasks = response.get("data", []) if isinstance(response, dict) else response
+            # Afformed vehicles API returns: {"vehicles": [...]}
+            tasks = response.get("vehicles", []) if isinstance(response, dict) else response
             return tasks
             
         except Exception as e:

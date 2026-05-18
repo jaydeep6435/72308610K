@@ -19,7 +19,8 @@ class LoggingAPIClient:
         self.endpoint = f"{base_url.rstrip('/')}{LOGGING_ENDPOINT_PATH}"
         
     def _get_token(self) -> str:
-        return get_env_variable("ACCESS_TOKEN", "")
+        token = get_env_variable("ACCESS_TOKEN", "")
+        return token.strip().strip('"').strip("'") if token else ""
 
     def _make_request(self, payload: Dict[str, Any]) -> None:
         """Core synchronous HTTP request using python-requests"""
@@ -33,13 +34,17 @@ class LoggingAPIClient:
             "Content-Type": "application/json"
         }
         
-        response = requests.post(
-            self.endpoint, 
-            json=payload, 
-            headers=headers, 
-            timeout=DEFAULT_TIMEOUT_SECONDS
-        )
-        response.raise_for_status()
+        try:
+            response = requests.post(
+                self.endpoint, 
+                json=payload, 
+                headers=headers, 
+                timeout=DEFAULT_TIMEOUT_SECONDS
+            )
+            response.raise_for_status()
+        except requests.exceptions.HTTPError as he:
+            fallback_logger.error(f"HTTPError: {he.response.status_code} | Server response: {he.response.text}")
+            raise LogNetworkException(f"HTTPError: {he.response.status_code} - {he.response.text}") from he
 
     def send_log(self, payload: Dict[str, Any]) -> None:
         """

@@ -21,14 +21,14 @@ class SchedulerService:
         try:
             # 1. Fetch Depot Data
             depot_data = DepotRepository.get_depot(depot_id)
-            available_hours = depot_data.get("availableHours", 0)
+            available_hours = depot_data.get("MechanicHours", 0)
             
             # Handle potential edge cases
             if available_hours <= 0:
-                Log("backend", "warn", "service", f"Depot {depot_id} reported 0 available hours")
+                Log("backend", "warn", "service", f"Depot {depot_id} reported 0 available MechanicHours")
             
-            # 2. Fetch Vehicle Task Data
-            tasks_data = VehicleRepository.get_tasks_for_depot(depot_id)
+            # 2. Fetch ALL Vehicle Task Data
+            tasks_data = VehicleRepository.get_all_tasks()
             
             # 3. Validate responses
             if not isinstance(tasks_data, list):

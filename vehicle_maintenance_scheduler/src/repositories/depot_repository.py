@@ -13,15 +13,33 @@ class DepotRepository:
     """
     @staticmethod
     def get_depot(depot_id: int) -> dict:
-        Log("backend", "info", "repository", f"Fetching depot data for ID {depot_id}")
+        Log("backend", "info", "repository", "Fetching all depots")
         
         # Centralized configuration usage
-        url = ConfigLoader.get_api_url(f"depots/{depot_id}")
+        url = ConfigLoader.get_api_url("depots")
         
         try:
             response = http_client.get(url)
-            Log("backend", "debug", "repository", f"Depot {depot_id} API response received")
-            return response
+            
+            # The API returns a dictionary like {"depots": [...]}
+            depots_list = response.get("depots", []) if isinstance(response, dict) else response
+            if not isinstance(depots_list, list):
+                depots_list = []
+                
+            Log("backend", "debug", "repository", f"Searching for depot ID {depot_id}")
+            
+            # Iterate to find the exact depot ID
+            for d in depots_list:
+                # We check ID matching dynamically to prevent type coercion bugs
+                if str(d.get("ID")) == str(depot_id) or str(d.get("depotId")) == str(depot_id):
+                    Log("backend", "info", "repository", "Matching depot found")
+                    return d
+                    
+            Log("backend", "warn", "repository", f"Depot ID {depot_id} not found")
+            raise CustomAPIException(f"Depot with ID {depot_id} does not exist.")
+            
+        except CustomAPIException as ce:
+            raise ce
         except Exception as e:
             Log("backend", "error", "repository", f"Failed to fetch depot data: {e}")
             raise CustomAPIException(f"Depot API resolution error: {str(e)}")

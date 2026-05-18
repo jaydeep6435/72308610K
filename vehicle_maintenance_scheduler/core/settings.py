@@ -43,8 +43,9 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     
-    # Extensive Logging Middleware Integration Point
-    # 'src.middleware.logging.LoggingMiddleware',
+    # Global Custom Middlewares
+    'src.middleware.request_logging_middleware.RequestLoggingMiddleware',
+    'src.middleware.exception_middleware.GlobalExceptionMiddleware',
 ]
 
 ROOT_URLCONF = 'core.urls'

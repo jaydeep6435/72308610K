@@ -5,8 +5,7 @@ ALLOWED_LEVELS = {"debug", "info", "warn", "error", "fatal"}
 
 ALLOWED_PACKAGES = {
     "cache", "controller", "cron_job", "db", "domain", 
-    "handler", "repository", "route", "service", 
-    "auth", "config", "middleware", "utils"
+    "handler", "repository", "route", "service"
 }
 
 # API Configuration

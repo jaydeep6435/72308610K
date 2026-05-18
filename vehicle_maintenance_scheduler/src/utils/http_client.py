@@ -39,9 +39,9 @@ class BaseHttpClient:
                 return response.json()
             except requests.exceptions.RequestException as e:
                 attempt += 1
-                Log("backend", "warn", "utils", f"HTTP {method} to {url} failed. Attempt {attempt}/{self.max_retries}. Error: {e}")
+                Log("backend", "warn", "repository", f"HTTP {method} to {url} failed. Attempt {attempt}/{self.max_retries}. Error: {e}")
                 if attempt > self.max_retries:
-                    Log("backend", "error", "utils", f"HTTP {method} to {url} permanently failed after {self.max_retries} retries.")
+                    Log("backend", "error", "repository", f"HTTP {method} to {url} permanently failed after {self.max_retries} retries.")
                     raise ExternalAPIException(f"Failed to communicate with {url}") from e
                 
                 # Exponential backoff
